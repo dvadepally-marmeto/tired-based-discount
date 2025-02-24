@@ -25,13 +25,17 @@ export function run(input) {
 
       try {
         const tiredDiscounts = JSON.parse(product.metafield.value);
-        const exactTierDiscount = tiredDiscounts.find((eachTier) => eachTier.quantity === line.quantity);
 
-        if (exactTierDiscount) {
+        // Find the best applicable discount for the given quantity
+        const bestDiscount = tiredDiscounts.reduce((best, current) => {
+          return line.quantity >= current.quantity ? current : best;
+        }, null);
+
+        if (bestDiscount) {
           return {
             targets: [{ cartLine: { id: line.id } }],
-            value: { percentage: { value: exactTierDiscount.discount.toString() } },
-            message: exactTierDiscount.message
+            value: { percentage: { value: bestDiscount.discount.toString() } },
+            message: bestDiscount.message
           };
         }
       } catch (error) {
@@ -40,7 +44,7 @@ export function run(input) {
 
       return null;
     })
-    .filter(Boolean);
+    .filter(Boolean); // Remove null values
 
   if (discounts.length === 0) return EMPTY_DISCOUNT;
 
